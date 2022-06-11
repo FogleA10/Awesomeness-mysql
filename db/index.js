@@ -22,12 +22,12 @@ class DB{
     }
     insertDepartment(department){
         return this.connection.promise().query(
-            "INSERT INTO department (name) VALUES (?)" , department
+            "INSERT INTO department SET ? " , department
         )
     }
-    insertEmployee(){
+    insertEmployee(employee){
         return this.connection.promise().query(
-            "INSERT INTO role SET ? "
+            "INSERT INTO employee SET ? ", employee
         )
     }
     insertRoles(allRoles){

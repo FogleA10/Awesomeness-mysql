@@ -14,6 +14,8 @@ async function mainMenu() {
                 'View all Departments',
                 "View all Roles",
                 'Add a Role',
+                'Add a Departments',
+                'Add an Employee',
                 'Exit'
             ]
         }
@@ -21,37 +23,34 @@ async function mainMenu() {
 
     switch (objVal.choice) {
         case 'View all Employees':
-            viewAllEmployess();
-            console.log('do something')
+            // done
+            viewAllEmployees();
             break;
         case 'View all Departments':
+            // done
             viewAllDepartments();
-            console.log('do something else')
             break;
         case 'View all Roles':
+            // done
             viewAllRoles();
-            console.log('Roles');
             break;
         case 'Add a Departments':
+            // done
             addADepartments();
-            console.log('Add-Departments');
             break;
         case 'Add a Role':
+            // done
             addRole();
-            console.log('Add-Role');
             break;
         case 'Add an Employee':
+            // done
             addEmployee();
-            console.log('Add-Employee');
             break;
         case 'Update an Employee Role':
+            // todo (bonus)
             updateEmployeeRole();
-            console.log('Update-Employee');
             break;
-
     }
-
-
 }
 
 
@@ -72,8 +71,8 @@ function viewAllRoles() {
     // const data = await db.query('SELECT * FROM employee')
     // console.table(data);
     db.roles()
-        .then(([data]) => {
-            console.table(data1);
+        .then((data) => {
+            console.table(data[0]);
         })
         .then(() => {
             mainMenu();
@@ -83,40 +82,80 @@ function viewAllRoles() {
 function viewAllEmployees() {
     // const data = await db.query('SELECT * FROM employee')
     // console.table(data);
-    db.employees()
+    db.allEmployees()
         .then(([data]) => {
-            console.table(data2);
+            console.table(data);
         })
         .then(() => {
             mainMenu();
         })
 
 };
-function addADepartments() {
+async function addADepartments() {
 
-    // const data = await db.query('SELECT * FROM employee')
-    // console.table(data);
-    db.insertDepartments(department)
-        .then(([data]) => {
-            console.table(data3);
-        })
-        .then(() => {
-            mainMenu();
-        })
+    const departmentChoices = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'name',
+            message: 'What is the department name?',
+        },
+    ])
+    await db.insertDepartment(departmentChoices);
 
-};
-function addRole() {
-    // const data = await db.query('SELECT * FROM employee')
-    // console.table(data);
-    db.insertRole()
-        .then(([data]) => {
-            console.table(data4);
-        })
-        .then(() => {
-            mainMenu();
-        })
+    await viewAllDepartments()
+
+    mainMenu();
 
 };
+async function addRole() {
+
+    await roleMenu();
+
+    mainMenu();
+
+};
+
+async function addEmployee() {
+
+    const roleChoices = await db.roles()
+    const choices = roleChoices[0].map(({title,id}) =>  ({ name: title, value: id }))
+
+    const managerChoices = await db.allEmployees();
+    const mChoices = managerChoices[0].map(({first_name, last_name ,id}) =>  ({ name: `${first_name} ${last_name}`, value: id }));
+
+
+    const employeeChoices = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'first_name',
+            message: 'what is the employee first name?',
+        },
+        {
+            type: 'input',
+            name: 'last_name',
+            message: 'what is the employee last name?',
+        },
+        {
+            type: 'list',
+            name: 'role_id',
+            message: 'Choice a role',
+            choices 
+        },
+        {
+            type: 'list',
+            name: 'manager_id',
+            message: 'Choice a role',
+            choices: mChoices
+        }
+
+    ])
+    await db.insertEmployee(employeeChoices);
+
+    await viewAllEmployees()
+
+    mainMenu();
+};
+
 function updateEmployeeRole() {
     // const data = await db.query('SELECT * FROM employee')
     // console.table(data);
@@ -134,27 +173,18 @@ function updateEmployeeRole() {
 
 
 
-// USE LEFT JOIN FOR EMPLOYEES TO GET INFO FROM role  AND department using FOREIGHN KEY
-// async function viewAllEmployees () {
-//     const data = await db.query('SELECT * FROM employee')
-//     console.table(data);
-//     mainMenu();
-// };
-//mimic function on line 59
-//
 // another series of question with inquirer new department, role, or employee.
 
 
 async function roleMenu() {
-    const departmentChoices = await db.departments()
-    const choices = departmentChoices.map(({name,id}) =>  ({ name, value: id }))
+    const departmentChoices = await db.departments();
+    const choices = departmentChoices[0].map(({name,id}) =>  ({ name, value: id }));
 
     const allRoleChoices = await inquirer.prompt([
         {
             type: 'input',
-            name: 'name',
+            name: 'title',
             message: 'What is the name of the role?',
-
         },
         {
             type: 'number',
@@ -167,16 +197,13 @@ async function roleMenu() {
             name: 'department_id',
             message: 'Choice a department',
             choices 
+        },
 
-        }
+    ]);
 
-    ])
     await db.insertRoles(allRoleChoices)
-    viewAllRoles();
+    await viewAllRoles()
 }
-
-
-//pass them  into the query , insert into the db, call another funciton again to show the table 
 
 
 mainMenu();
